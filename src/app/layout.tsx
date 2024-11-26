@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { notoSans } from './components/ui/fonts';
 import './globals.css';
-import Navbar from './components/ui/Navbar';
+import MMProvider from './components/ui/MMProvider';
+import NavBar from './components/ui/Navbar';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -16,10 +17,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${notoSans.className} antialiased`}>
-        <div className="container px-4">
-          <Navbar />
+        <MMProvider>
+          <NavBar />
           {children}
-        </div>
+        </MMProvider>
       </body>
     </html>
   );

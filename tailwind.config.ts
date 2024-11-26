@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss';
 import daisyui from 'daisyui';
+import typography from '@tailwindcss/typography';
 
 export default {
   content: [
@@ -7,6 +8,6 @@ export default {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  plugins: [daisyui],
-  daisyui: { themes: ['sunset'] },
+  plugins: [typography, daisyui],
+  daisyui: { themes: ['dark'] },
 } satisfies Config;

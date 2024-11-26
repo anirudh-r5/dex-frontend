@@ -1,15 +1,19 @@
 'use client';
 
-import { useSDK, MetaMaskProvider } from '@metamask/sdk-react';
+import { useSDK } from '@metamask/sdk-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
 export const ConnectWalletButton = () => {
-  const { sdk, connected, connecting } = useSDK();
+  const { sdk, connecting } = useSDK();
   const [account, setAccount] = useState<string>();
+  const router = useRouter();
 
   const connect = async () => {
     try {
       const accounts = await sdk.connect();
       setAccount(accounts?.[0]);
+      router.push('/dashboard');
     } catch (err) {
       console.warn(`No accounts found`, err);
     }
@@ -18,17 +22,23 @@ export const ConnectWalletButton = () => {
   const disconnect = () => {
     if (sdk) {
       sdk.terminate();
+      setAccount('');
+      router.push('/');
     }
   };
 
   return (
     <div className="relative">
       {account ? (
-        <button onClick={disconnect} className="btn">
+        <button onClick={disconnect} className="btn btn-outline btn-warning">
           Disconnect
         </button>
       ) : (
-        <button className="btn" disabled={connecting} onClick={connect}>
+        <button
+          className="btn btn-outline btn-success"
+          disabled={connecting}
+          onClick={connect}
+        >
           Connect
         </button>
       )}
@@ -36,25 +46,19 @@ export const ConnectWalletButton = () => {
   );
 };
 
-export const NavBar = () => {
-  const sdkOptions = {
-    logging: { developerMode: false },
-    checkInstallationImmediately: false,
-    dappMetadata: {
-      name: 'Next-Metamask-Boilerplate',
-      url: 'http://localhost:3000', // using the host constant defined above
-    },
-  };
-
+export function NavBar() {
   return (
-    <div className="navbar">
-      <div className="flex-none">
-        <MetaMaskProvider debug={false} sdkOptions={sdkOptions}>
+    <div className="flex bg-base-300 shadow-xl rounded-sm px-4">
+      <div className="navbar">
+        <div className="flex-1">
+          <a className="btn text-xl font-bold">InDEX</a>
+        </div>
+        <div className="flex-none">
           <ConnectWalletButton />
-        </MetaMaskProvider>
+        </div>
       </div>
     </div>
   );
-};
+}
 
 export default NavBar;
