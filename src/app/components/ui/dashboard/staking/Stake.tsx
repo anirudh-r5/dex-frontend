@@ -1,4 +1,20 @@
+'use client';
+
+import { stakerAbi } from '@/app/lib/generated';
+import { useReadContract } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
+
 export default function Stake() {
+  const queryClient = useQueryClient();
+  const { data, queryKey } = useReadContract({
+    abi: stakerAbi,
+    address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
+    functionName: 'timeLeft',
+  });
+  async function checkContract() {
+    await queryClient.invalidateQueries({ queryKey });
+    console.log(data);
+  }
   return (
     <div className="card bg-base-200 shadow-2xl my-4">
       <div className="card-body text-center items-center">
@@ -39,7 +55,12 @@ export default function Stake() {
           <button className="btn btn-error" disabled={true}>
             Withdraw
           </button>
-          <button className="btn btn-primary col-span-2">Stake Now!</button>
+          <button
+            className="btn btn-primary col-span-2"
+            onClick={checkContract}
+          >
+            Stake Now!
+          </button>
         </div>
       </div>
     </div>
