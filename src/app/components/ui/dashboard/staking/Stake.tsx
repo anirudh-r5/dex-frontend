@@ -1,25 +1,42 @@
 'use client';
 
 import { stakerAbi } from '@/app/lib/generated';
-import { useReadContract } from 'wagmi';
+import { useReadContract, useWriteContract } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function Stake() {
   const queryClient = useQueryClient();
-  const { data, queryKey } = useReadContract({
+  const stakeAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
+  const { data: timeLeft, queryKey } = useReadContract({
     abi: stakerAbi,
-    address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
+    address: stakeAddress,
     functionName: 'timeLeft',
   });
-  async function checkContract() {
-    await queryClient.invalidateQueries({ queryKey });
-    console.log(data);
+  const {
+    data: stakeData,
+    isPending: stakePending,
+    writeContractAsync: stakeWriter,
+  } = useWriteContract();
+
+  async function stakeEth() {
+    await stakeWriter({
+      abi: stakerAbi,
+      address: stakeAddress,
+      functionName: 'stake',
+    });
+    console.log(stakeData);
   }
+
+  async function checkTimeLeft() {
+    await queryClient.invalidateQueries({ queryKey });
+    console.log(timeLeft);
+  }
+
   return (
     <div className="card bg-base-200 shadow-2xl my-4">
       <div className="card-body text-center items-center">
         <h2 className="card-title">Stake Contract</h2>
-        <p className="italic">By: 0x1234...ab0f</p>
+        <p className="italic">{`Address: ${stakeAddress}`}</p>
         <div className="grid grid-cols-2 gap-4">
           <div className="stats stats-vertical shadow-xl bg-base-300">
             <div className="stat">
@@ -55,12 +72,21 @@ export default function Stake() {
           <button className="btn btn-error" disabled={true}>
             Withdraw
           </button>
-          <button
-            className="btn btn-primary col-span-2"
-            onClick={checkContract}
-          >
-            Stake Now!
-          </button>
+          <div className="join col-span-2">
+            <input
+              type="text"
+              placeholder="Enter amount"
+              className="input input-bordered input-primary join-item"
+              disabled={stakePending}
+            />
+            <button
+              className="btn join-item btn-primary"
+              onClick={stakeEth}
+              disabled={stakePending}
+            >
+              Stake Now!
+            </button>
+          </div>
         </div>
       </div>
     </div>

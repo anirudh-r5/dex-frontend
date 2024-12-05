@@ -7,7 +7,7 @@ declare module 'wagmi' {
   }
 }
 
-export const config = defineConfig({
+const config = defineConfig({
   out: 'src/app/lib/generated.ts',
   contracts: [],
   plugins: [
@@ -16,3 +16,5 @@ export const config = defineConfig({
     }),
   ],
 });
+
+export default config;
