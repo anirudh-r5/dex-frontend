@@ -3,7 +3,7 @@
 import { stakerAbi } from '@/app/lib/generated';
 import {
   useAccount,
-  useReadContract,
+  useReadContracts,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi';
@@ -12,41 +12,45 @@ import { formatEther, parseEther } from 'viem';
 import { AnimatePresence, motion } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import bigIntSupport from 'dayjs/plugin/bigIntSupport';
 
 export default function Stake() {
   const queryClient = useQueryClient();
-  const stakeAddress = '0x59b670e9fA9D0A427751Af201D676719a970857b';
+  const stakeAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e';
+  dayjs.extend(bigIntSupport);
   const { address } = useAccount();
   const [stake, setStake] = useState('');
-  const [target, setTarget] = useState<bigint>(BigInt(0));
-  const [raised, setRaised] = useState<bigint>(BigInt(0));
-  const [selfRaised, setSelfRaised] = useState<bigint>(BigInt(0));
-  const [deadline, setDeadline] = useState<number>();
+  const [target, setTarget] = useState<bigint>();
+  const [raised, setRaised] = useState<bigint>();
+  const [selfRaised, setSelfRaised] = useState<bigint>();
+  const [deadline, setDeadline] = useState<bigint>();
   const [countdownTime, setCountdownTime] = useState({ h: 0, m: 0, s: 0 });
   const [notifyStake, setnotifyStake] = useState(true);
-  const { data: timeLeft } = useReadContract({
-    abi: stakerAbi,
-    address: stakeAddress,
-    functionName: 'deadline',
-  });
 
-  const { data: targetEth } = useReadContract({
-    abi: stakerAbi,
-    address: stakeAddress,
-    functionName: 'threshold',
-  });
-
-  const { data: raisedEth, queryKey } = useReadContract({
-    abi: stakerAbi,
-    address: stakeAddress,
-    functionName: 'raised',
-  });
-
-  const { data: selfEth } = useReadContract({
-    abi: stakerAbi,
-    address: stakeAddress,
-    functionName: 'balances',
-    args: [address],
+  const reads = useReadContracts({
+    contracts: [
+      {
+        abi: stakerAbi,
+        address: stakeAddress,
+        functionName: 'deadline',
+      },
+      {
+        abi: stakerAbi,
+        address: stakeAddress,
+        functionName: 'threshold',
+      },
+      {
+        abi: stakerAbi,
+        address: stakeAddress,
+        functionName: 'raised',
+      },
+      {
+        abi: stakerAbi,
+        address: stakeAddress,
+        functionName: 'balances',
+        args: [address],
+      },
+    ],
   });
 
   const {
@@ -67,7 +71,7 @@ export default function Stake() {
       functionName: 'stake',
       value: parseEther(stake),
     });
-    await queryClient.invalidateQueries({ queryKey });
+    await queryClient.invalidateQueries();
     setnotifyStake(true);
   }
 
@@ -80,28 +84,27 @@ export default function Stake() {
   }
 
   useEffect(() => {
-    if (targetEth) setTarget(targetEth);
-    if (raisedEth) setRaised(raisedEth);
-    if (selfEth) setSelfRaised(selfEth);
-    setDeadline(Number(timeLeft));
-    const limit = dayjs(Number(timeLeft));
-    const dead = {
-      h: limit.diff(dayjs(), 'h'),
-      m: limit.diff(dayjs(), 'm'),
-      s: limit.diff(dayjs(), 's'),
-    };
-    setCountdownTime(dead);
-  }, [targetEth, raisedEth, selfEth, timeLeft]);
+    setDeadline(reads.data?.[0].result);
+    setTarget(reads.data?.[1].result);
+    setRaised(reads.data?.[2].result);
+    setSelfRaised(reads.data?.[3].result);
+  }, [reads]);
 
   useEffect(() => {
     const updater = setInterval(() => {
-      const limit = dayjs(deadline);
-      const dead = {
-        h: limit.diff(dayjs(), 'h'),
-        m: limit.diff(dayjs(), 'm'),
-        s: limit.diff(dayjs(), 's'),
-      };
-      setCountdownTime(dead);
+      const limit = new Date(Number(deadline) * 1000);
+      const now = new Date();
+      let diff = (limit.getTime() - now.getTime()) / 1000;
+      const hours = Math.floor(diff / 3600);
+      diff -= hours * 3600;
+      const mins = Math.floor(diff / 60) % 60;
+      diff -= mins * 60;
+      const secs = Math.floor(diff) % 60;
+      setCountdownTime({
+        h: hours,
+        m: mins,
+        s: secs,
+      });
     }, 1000);
     return () => clearInterval(updater);
   }, [deadline]);
@@ -115,7 +118,7 @@ export default function Stake() {
           <div className="stats stats-vertical shadow-xl bg-base-300">
             <div className="stat">
               <div className="stat-title">Target ETH</div>
-              <div className="stat-value text-primary">{`${formatEther(target)} ETH`}</div>
+              <div className="stat-value text-primary">{`${target ? formatEther(target) : 0} ETH`}</div>
             </div>
 
             <div className="stat">
@@ -128,12 +131,12 @@ export default function Stake() {
           <div className="stats stats-vertical shadow-xl bg-base-300">
             <div className="stat">
               <div className="stat-title">Total Staked</div>
-              <div className="stat-value text-error">{`${formatEther(raised)}/${formatEther(target)} ETH`}</div>
+              <div className="stat-value text-error">{`${raised ? formatEther(raised) : 0} / ${target ? formatEther(target) : 0} ETH`}</div>
             </div>
 
             <div className="stat">
               <div className="stat-title">Your Stake</div>
-              <div className="stat-value text-success">{`${formatEther(selfRaised)} ETH`}</div>
+              <div className="stat-value text-success">{`${selfRaised ? formatEther(selfRaised) : 0} ETH`}</div>
             </div>
           </div>
         </div>
