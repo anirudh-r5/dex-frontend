@@ -8,7 +8,7 @@ declare module 'wagmi' {
 }
 
 const config = defineConfig({
-  out: 'src/app/lib/generated.ts',
+  out: 'src/app/lib/abi.ts',
   contracts: [],
   plugins: [
     hardhat({

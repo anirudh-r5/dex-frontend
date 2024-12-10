@@ -4,7 +4,6 @@ import './globals.css';
 import '@rainbow-me/rainbowkit/styles.css';
 import NavBar from './components/ui/Navbar';
 import Connections from './components/ui/Connections';
-import 'dotenv/config';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -18,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${notoSans.className} antialiased`}>
+      <body className={`h-full ${notoSans.className} antialiased`}>
         <Connections>
           <NavBar />
           {children}

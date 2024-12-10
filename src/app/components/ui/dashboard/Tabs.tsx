@@ -1,32 +1,31 @@
 'use client';
 
 import clsx from 'clsx';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Tabs() {
   const [page, setPage] = useState(0);
+  const pages = [
+    '/dashboard',
+    '/dashboard/exchange',
+    '/dashboard/market',
+    '/dashboard/staking',
+  ];
   const router = useRouter();
+  const pathname = usePathname();
 
   const navigate = (num: number) => {
-    switch (num) {
-      case 0:
-        router.push('/dashboard');
-        break;
-      case 1:
-        router.push('/dashboard/exchange');
-        break;
-      case 2:
-        router.push('/dashboard/market');
-        break;
-      case 3:
-        router.push('/dashboard/staking');
-        break;
-      default:
-        break;
-    }
+    router.push(pages[num]);
     setPage(num);
   };
+
+  useEffect(() => {
+    if (pathname === '/dashboard') setPage(0);
+    else if (pathname === '/dashboard/exchange') setPage(1);
+    else if (pathname === '/dashboard/market') setPage(2);
+    else setPage(3);
+  }, [pathname]);
   return (
     <div role="tablist" className="tabs tabs-bordered">
       <button

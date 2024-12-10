@@ -1,6 +1,6 @@
 'use client';
 
-import { stakerAbi } from '@/app/lib/generated';
+import { stakerAbi } from '@/app/lib/abi';
 import {
   useAccount,
   useReadContracts,
@@ -8,7 +8,7 @@ import {
   useWriteContract,
 } from 'wagmi';
 import { ChangeEvent, useEffect, useState } from 'react';
-import { formatEther, parseEther } from 'viem';
+import { Address, formatEther, parseEther } from 'viem';
 import { AnimatePresence, motion } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -16,7 +16,10 @@ import bigIntSupport from 'dayjs/plugin/bigIntSupport';
 
 export default function Stake() {
   const queryClient = useQueryClient();
-  const stakeAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e';
+  const stakeContract = {
+    abi: stakerAbi,
+    address: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707' as Address,
+  };
   dayjs.extend(bigIntSupport);
   const { address } = useAccount();
   const [stake, setStake] = useState('');
@@ -30,25 +33,21 @@ export default function Stake() {
   const reads = useReadContracts({
     contracts: [
       {
-        abi: stakerAbi,
-        address: stakeAddress,
+        ...stakeContract,
         functionName: 'deadline',
       },
       {
-        abi: stakerAbi,
-        address: stakeAddress,
+        ...stakeContract,
         functionName: 'threshold',
       },
       {
-        abi: stakerAbi,
-        address: stakeAddress,
+        ...stakeContract,
         functionName: 'raised',
       },
       {
-        abi: stakerAbi,
-        address: stakeAddress,
+        ...stakeContract,
         functionName: 'balances',
-        args: [address],
+        args: [address as Address],
       },
     ],
   });
@@ -66,8 +65,7 @@ export default function Stake() {
 
   async function stakeEth() {
     await stakeWriter({
-      abi: stakerAbi,
-      address: stakeAddress,
+      ...stakeContract,
       functionName: 'stake',
       value: parseEther(stake),
     });
@@ -84,6 +82,7 @@ export default function Stake() {
   }
 
   useEffect(() => {
+    console.log(process.env);
     setDeadline(reads.data?.[0].result);
     setTarget(reads.data?.[1].result);
     setRaised(reads.data?.[2].result);
@@ -113,7 +112,7 @@ export default function Stake() {
     <div className="card bg-base-200 shadow-2xl my-4 w-500">
       <div className="card-body text-center items-center">
         <h2 className="card-title">Stake Contract</h2>
-        <p className="italic">{`Address: ${stakeAddress}`}</p>
+        <p className="italic">{`Address: ${stakeContract.address}`}</p>
         <div className="grid grid-cols-2 gap-4">
           <div className="stats stats-vertical shadow-xl bg-base-300">
             <div className="stat">
