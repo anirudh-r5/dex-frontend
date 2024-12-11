@@ -18,7 +18,7 @@ export default function Stake() {
   const queryClient = useQueryClient();
   const stakeContract = {
     abi: stakerAbi,
-    address: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707' as Address,
+    address: process.env.NEXT_PUBLIC_STAKE_ADDRESS as Address,
   };
   dayjs.extend(bigIntSupport);
   const { address } = useAccount();

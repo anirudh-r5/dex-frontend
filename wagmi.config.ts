@@ -7,14 +7,16 @@ declare module 'wagmi' {
   }
 }
 
-const config = defineConfig({
-  out: 'src/app/lib/abi.ts',
-  contracts: [],
-  plugins: [
-    hardhat({
-      project: '../dex-backend',
-    }),
-  ],
-});
+const config = defineConfig([
+  {
+    out: 'src/app/lib/abi.ts',
+    contracts: [],
+    plugins: [
+      hardhat({
+        project: '../dex-backend',
+      }),
+    ],
+  },
+]);
 
 export default config;

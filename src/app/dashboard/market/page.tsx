@@ -1,11 +1,10 @@
 'use client';
 import Item from '@/app/components/ui/dashboard/market/Item';
-import { marketplaceAbi, nftAbi } from '@/app/lib/abi';
+import { nftMarketplaceAbi, basicNftAbi } from '@/app/lib/abi';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { Address } from 'viem';
-import { useConfig, useReadContracts, useWriteContract } from 'wagmi';
-import { readContract } from '@wagmi/core';
+import { useConfig, useReadContract, useWriteContract } from 'wagmi';
 
 export interface ItemListing {
   marketItemId: bigint;
@@ -27,19 +26,22 @@ export default function Market() {
   const config = useConfig();
 
   const market = {
-    abi: marketplaceAbi,
+    abi: nftMarketplaceAbi,
     address: process.env.NEXT_MARKET_ADDRESS as Address,
   };
   const nft = {
-    abi: nftAbi,
+    abi: basicNftAbi,
     address: process.env.NEXT_NFT_ADDRESS as Address,
   };
 
-  const allItems = useReadContracts({
-    contracts: [
-      { ...market, functionName: 'fetchAvailableMarketItems' },
-      { ...market, functionName: 'fetchOwnedMarketItems' },
-    ],
+  const { data } = useReadContract({
+    ...nft,
+    functionName: 'getAll',
+  });
+
+  const { data: counter } = useReadContract({
+    ...nft,
+    functionName: 'getTokenCounter',
   });
 
   const { writeContractAsync: minter } = useWriteContract();
@@ -61,38 +63,16 @@ export default function Market() {
   async function mintNew() {
     await minter({
       ...nft,
-      functionName: 'mintToken',
-      args: [`${listings.length}`],
+      functionName: 'mintNft',
+      args: [String(listings.length)],
+      gas: BigInt(3000000),
     });
   }
 
   useEffect(() => {
-    const fetchAll = async () => {
-      const items = allItems.data ? allItems.data[0].result : [];
-      const own = allItems.data ? allItems.data[1].result : [];
-      const listItems: ItemListing[] = [];
-      const ownItems: ItemListing[] = [];
-      for (const item of items) {
-        const result = await readContract(config, {
-          ...nft,
-          functionName: 'tokenURI',
-          args: [item.tokenId],
-        });
-        listItems.push({ ...item, uri: result });
-      }
-      for (const item of own) {
-        const result = await readContract(config, {
-          ...nft,
-          functionName: 'tokenURI',
-          args: [item.tokenId],
-        });
-        ownItems.push({ ...item, uri: result });
-      }
-      setListings(listItems);
-      setOwned(ownItems);
-    };
-    fetchAll();
-  }, [allItems.data]);
+    console.log(data);
+    console.log(counter);
+  });
 
   return (
     <div>
