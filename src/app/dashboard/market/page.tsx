@@ -4,9 +4,10 @@ import { marketplaceAbi, nftAbi } from '@/app/lib/abi';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { Address } from 'viem';
-import { useReadContracts } from 'wagmi';
+import { useConfig, useReadContracts, useWriteContract } from 'wagmi';
+import { readContract } from '@wagmi/core';
 
-interface ItemListing {
+export interface ItemListing {
   marketItemId: bigint;
   nftContractAddress: Address;
   tokenId: bigint;
@@ -16,12 +17,14 @@ interface ItemListing {
   price: bigint;
   sold: boolean;
   canceled: boolean;
+  uri: string;
 }
 
 export default function Market() {
   const [marketMode, setMarketMode] = useState(true);
   const [listings, setListings] = useState<ItemListing[]>([]);
   const [owned, setOwned] = useState<ItemListing[]>([]);
+  const config = useConfig();
 
   const market = {
     abi: marketplaceAbi,
@@ -39,18 +42,57 @@ export default function Market() {
     ],
   });
 
-  useEffect(() => {
-    const items = allItems.data ? allItems.data[0].result : [];
-    const own = allItems.data ? allItems.data[1].result : [];
-    setListings(items);
-    setOwned(own);
-  }, [allItems.data]);
+  const { writeContractAsync: minter } = useWriteContract();
 
-  function displayListings() {
-    for (const item of listings) {
-
+  function displayListings(page: number) {
+    const items = [];
+    if (page === 0) {
+      for (const item of listings) {
+        items.push(<Item listing={item} />);
+      }
+    } else {
+      for (const item of owned) {
+        items.push(<Item listing={item} />);
+      }
     }
+    return items;
   }
+
+  async function mintNew() {
+    await minter({
+      ...nft,
+      functionName: 'mintToken',
+      args: [`${listings.length}`],
+    });
+  }
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      const items = allItems.data ? allItems.data[0].result : [];
+      const own = allItems.data ? allItems.data[1].result : [];
+      const listItems: ItemListing[] = [];
+      const ownItems: ItemListing[] = [];
+      for (const item of items) {
+        const result = await readContract(config, {
+          ...nft,
+          functionName: 'tokenURI',
+          args: [item.tokenId],
+        });
+        listItems.push({ ...item, uri: result });
+      }
+      for (const item of own) {
+        const result = await readContract(config, {
+          ...nft,
+          functionName: 'tokenURI',
+          args: [item.tokenId],
+        });
+        ownItems.push({ ...item, uri: result });
+      }
+      setListings(listItems);
+      setOwned(ownItems);
+    };
+    fetchAll();
+  }, [allItems.data]);
 
   return (
     <div>
@@ -71,7 +113,13 @@ export default function Market() {
         </button>
       </div>
       <div className="grid grid-cols-5 grid-rows-5 grid-flow-row-dense justify-center gap-3">
-        {marketMode && }
+        {marketMode && displayListings(0)}
+        {!marketMode && (
+          <button className="btn btn-secondary" onClick={mintNew}>
+            Mint NFT
+          </button>
+        )}
+        {!marketMode && displayListings(1)}
       </div>
     </div>
   );
