@@ -1,3 +1,5 @@
+import Token from '@/app/components/ui/dashboard/exchange/Token';
+
 export default function Exchange() {
-  return <div>This is the exchange page</div>;
+  return <Token />;
 }

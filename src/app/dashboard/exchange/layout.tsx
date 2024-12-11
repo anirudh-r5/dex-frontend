@@ -1,3 +1,7 @@
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <div className="grow py-4">{children}</div>;
+  return (
+    <div className="grid grid-flow-row auto-rows-auto justify-center">
+      {children}
+    </div>
+  );
 }
