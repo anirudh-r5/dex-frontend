@@ -23,12 +23,15 @@ export default function Stake() {
   dayjs.extend(bigIntSupport);
   const { address } = useAccount();
   const [stake, setStake] = useState('');
-  const [target, setTarget] = useState<bigint>();
-  const [raised, setRaised] = useState<bigint>();
+  const [target, setTarget] = useState<bigint>(BigInt(0));
+  const [raised, setRaised] = useState<bigint>(BigInt(0));
   const [selfRaised, setSelfRaised] = useState<bigint>();
   const [deadline, setDeadline] = useState<bigint>();
   const [countdownTime, setCountdownTime] = useState({ h: 0, m: 0, s: 0 });
   const [notifyStake, setnotifyStake] = useState(true);
+  const [stakeReached, setStakeReached] = useState(false);
+  const [failure, setFailure] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(false);
 
   const reads = useReadContracts({
     contracts: [
@@ -58,6 +61,8 @@ export default function Stake() {
     writeContractAsync: stakeWriter,
   } = useWriteContract();
 
+  const { writeContractAsync: successWriter } = useWriteContract();
+
   const { isLoading: stakeConfirming, isSuccess: stakeConfirmed } =
     useWaitForTransactionReceipt({
       hash: stakeData,
@@ -81,6 +86,20 @@ export default function Stake() {
     setnotifyStake(false);
   }
 
+  async function stakeSuccess(status: boolean) {
+    if (status) {
+      await successWriter({
+        ...stakeContract,
+        functionName: 'execute',
+      });
+    } else {
+      await successWriter({
+        ...stakeContract,
+        functionName: 'withdraw',
+      });
+    }
+  }
+
   useEffect(() => {
     console.log(process.env);
     setDeadline(reads.data?.[0].result);
@@ -93,20 +112,37 @@ export default function Stake() {
     const updater = setInterval(() => {
       const limit = new Date(Number(deadline) * 1000);
       const now = new Date();
-      let diff = (limit.getTime() - now.getTime()) / 1000;
-      const hours = Math.floor(diff / 3600);
-      diff -= hours * 3600;
-      const mins = Math.floor(diff / 60) % 60;
-      diff -= mins * 60;
-      const secs = Math.floor(diff) % 60;
-      setCountdownTime({
-        h: hours,
-        m: mins,
-        s: secs,
-      });
+      if (limit.getTime > now.getTime) {
+        setCountdownTime({
+          h: 0,
+          m: 0,
+          s: 0,
+        });
+      } else {
+        let diff = (limit.getTime() - now.getTime()) / 1000;
+        const hours = Math.floor(diff / 3600);
+        diff -= hours * 3600;
+        const mins = Math.floor(diff / 60) % 60;
+        diff -= mins * 60;
+        const secs = Math.floor(diff) % 60;
+        setCountdownTime({
+          h: hours,
+          m: mins,
+          s: secs,
+        });
+      }
     }, 1000);
     return () => clearInterval(updater);
   }, [deadline]);
+
+  useEffect(() => {
+    const reached = { h: 0, m: 0, s: 0 };
+    if (countdownTime === reached && raised >= target) {
+      setStakeReached(true);
+    } else if (countdownTime === reached && raised <= target) {
+      setFailure(true);
+    }
+  }, [countdownTime, raised, target]);
 
   return (
     <div className="card bg-base-200 shadow-2xl my-4 w-500">
@@ -130,7 +166,7 @@ export default function Stake() {
           <div className="stats stats-vertical shadow-xl bg-base-300">
             <div className="stat">
               <div className="stat-title">Total Staked</div>
-              <div className="stat-value text-error">{`${raised ? formatEther(raised) : 0} / ${target ? formatEther(target) : 0} ETH`}</div>
+              <div className="stat-value text-error">{`${raised ? formatEther(raised) : 0} ETH`}</div>
             </div>
 
             <div className="stat">
@@ -140,10 +176,18 @@ export default function Stake() {
           </div>
         </div>
         <div className="card-actions grid grid-cols-2 grid-rows-2 gap-4 justify-items-stretch">
-          <button className="btn btn-info" disabled={true}>
+          <button
+            className="btn btn-info"
+            disabled={!stakeReached}
+            onClick={() => stakeSuccess(true)}
+          >
             Execute
           </button>
-          <button className="btn btn-error" disabled={true}>
+          <button
+            className="btn btn-error"
+            disabled={!failure}
+            onClick={() => stakeSuccess(true)}
+          >
             Withdraw
           </button>
           <div className="join col-span-2">
@@ -258,6 +302,25 @@ export default function Stake() {
           )}
         </AnimatePresence>
       </div>
+      {successMessage && (
+        <dialog className="modal">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Staking Success!</h3>
+            <p className="py-4">{raised} ETH raised!</p>
+            <p className="py-4">Reward Contract executed!</p>
+            <div className="modal-action">
+              <form method="dialog">
+                <button
+                  className="btn"
+                  onClick={() => setSuccessMessage(false)}
+                >
+                  Close
+                </button>
+              </form>
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 }

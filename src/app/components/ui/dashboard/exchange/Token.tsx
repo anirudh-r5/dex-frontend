@@ -20,6 +20,7 @@ export default function Token() {
   const [exchange, setExchange] = useState('');
   const [tradeMode, setTradeMode] = useState(false); //true = sell, false = buy
   const [tokens, setTokens] = useState<TokenState[]>([]);
+  const [logo, setLogo] = useState<string>();
 
   const usdtToken = {
     abi: tokenAbi,
@@ -63,10 +64,7 @@ export default function Token() {
           <button className="btn no-animation" onClick={tokenSelect} value={t}>
             <div className="avatar">
               <div className="w-8 rounded-full">
-                <img
-                  src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                  alt="Tailwind-CSS-Avatar-component"
-                />
+                <img src={logo} />
               </div>
             </div>
             {`${tokens[t].tName} ${tokens[t].tSym}`}
@@ -80,6 +78,10 @@ export default function Token() {
   function tokenSelect(e: React.MouseEvent) {
     const token = Number((e.target as HTMLInputElement).value);
     setCurrentToken(tokens[token]);
+    if (token === 0)
+      setLogo('https://cryptologos.cc/logos/tether-usdt-logo.png');
+    if (token === 1)
+      setLogo('https://cryptologos.cc/logos/usd-coin-usdc-logo.png');
   }
 
   function toggleTradeMode() {
@@ -174,10 +176,7 @@ export default function Token() {
             <div className="grid grid-flow-col gap-3 items-center">
               <div className="avatar justify-end">
                 <div className="w-16 rounded-full">
-                  <img
-                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                    alt="Tailwind-CSS-Avatar-component"
-                  />
+                  <img src={logo} />
                 </div>
               </div>
               <h2 className="card-title">{`${currentToken.tName} (${currentToken.tSym})`}</h2>

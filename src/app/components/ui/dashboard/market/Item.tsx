@@ -1,15 +1,29 @@
 import { ItemListing } from '@/app/dashboard/market/page';
 import { pngs } from '@/app/lib/imgLoader';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { StaticImageData } from 'next/image';
+import { randomInt } from 'crypto';
+import { Address } from 'viem';
 
 interface ItemProps {
   listing: ItemListing;
+  address: Address;
+  lister(id: number, price: number): void;
+  buyer(id: number, price: number): void;
 }
 
-export default function Item({ listing }: ItemProps) {
+export default function Item({ listing, address, lister, buyer }: ItemProps) {
   const [nftImg, setNftImg] = useState<StaticImageData>();
   const [nftName, setNftName] = useState<string>();
+  const [money, setMoney] = useState<number>(0);
+
+  function handleMoney(e: ChangeEvent<HTMLInputElement>) {
+    setMoney(Number(e.target.value));
+  }
+
+  function handleBuy() {
+    buyer(listing.id, Number(listing.price));
+  }
 
   useEffect(() => {
     switch (listing.data) {
@@ -53,6 +67,10 @@ export default function Item({ listing }: ItemProps) {
         setNftImg(pngs[9]);
         setNftName('The Panda');
         break;
+      default:
+        setNftImg(pngs[randomInt(9)]);
+        setNftName('The Stranger');
+        break;
     }
   }, [listing.data]);
   return (
@@ -62,10 +80,31 @@ export default function Item({ listing }: ItemProps) {
       </figure>
       <div className="card-body items-center text-center">
         <h2 className="card-title">{nftName}</h2>
-        <p>Seller: {listing.seller}</p>
-        <p>Price: {listing.price}</p>
+        <p>Id: {listing.id}</p>
+        <p>{listing.listed && `Price: ${listing.price}`}</p>
         <div className="card-actions">
-          <button className="btn btn-primary">Buy Now</button>
+          {!listing.listed && listing.owner === address && (
+            <div className="join col-span-2">
+              <input
+                type="text"
+                placeholder="Enter amount"
+                className="input input-bordered input-secondary join-item"
+                value={money}
+                onChange={handleMoney}
+              />
+              <button
+                className="btn btn-secondary"
+                onClick={() => lister(listing.id, money)}
+              >
+                List for sale
+              </button>
+            </div>
+          )}
+          {listing.listed && listing.owner !== address && (
+            <button className="btn btn-primary" onClick={handleBuy}>
+              Buy Now
+            </button>
+          )}
         </div>
       </div>
     </div>

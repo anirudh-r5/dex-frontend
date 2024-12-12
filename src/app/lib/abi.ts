@@ -1604,20 +1604,48 @@ export const ierc721ReceiverAbi = [
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export const marketplaceAbi = [
-  { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'nftAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'AlreadyListed',
+  },
+  { type: 'error', inputs: [], name: 'NoProceeds' },
+  { type: 'error', inputs: [], name: 'NotApprovedForMarketplace' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'nftAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'NotListed',
+  },
+  { type: 'error', inputs: [], name: 'NotOwner' },
+  { type: 'error', inputs: [], name: 'PriceMustBeAboveZero' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'nftAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'price', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'PriceNotMet',
+  },
   { type: 'error', inputs: [], name: 'ReentrancyGuardReentrantCall' },
   {
     type: 'event',
     anonymous: false,
     inputs: [
       {
-        name: 'marketItemId',
-        internalType: 'uint256',
-        type: 'uint256',
+        name: 'buyer',
+        internalType: 'address',
+        type: 'address',
         indexed: true,
       },
       {
-        name: 'nftContract',
+        name: 'nftAddress',
         internalType: 'address',
         type: 'address',
         indexed: true,
@@ -1629,22 +1657,60 @@ export const marketplaceAbi = [
         indexed: true,
       },
       {
-        name: 'creator',
-        internalType: 'address',
-        type: 'address',
+        name: 'price',
+        internalType: 'uint256',
+        type: 'uint256',
         indexed: false,
       },
+    ],
+    name: 'ItemBought',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
       {
         name: 'seller',
         internalType: 'address',
         type: 'address',
-        indexed: false,
+        indexed: true,
       },
       {
-        name: 'owner',
+        name: 'nftAddress',
         internalType: 'address',
         type: 'address',
-        indexed: false,
+        indexed: true,
+      },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'ItemCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'seller',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'nftAddress',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
       },
       {
         name: 'price',
@@ -1652,191 +1718,84 @@ export const marketplaceAbi = [
         type: 'uint256',
         indexed: false,
       },
-      { name: 'sold', internalType: 'bool', type: 'bool', indexed: false },
-      { name: 'canceled', internalType: 'bool', type: 'bool', indexed: false },
     ],
-    name: 'MarketItemCreated',
+    name: 'ItemListed',
   },
   {
     type: 'function',
     inputs: [
-      { name: 'nftContractAddress', internalType: 'address', type: 'address' },
-      { name: 'marketItemId', internalType: 'uint256', type: 'uint256' },
+      { name: 'nftAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
     ],
-    name: 'cancelMarketItem',
+    name: 'buyItem',
     outputs: [],
     stateMutability: 'payable',
   },
   {
     type: 'function',
     inputs: [
-      { name: 'nftContractAddress', internalType: 'address', type: 'address' },
+      { name: 'nftAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'cancelListing',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'nftAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'getListing',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct Marketplace.Listing',
+        type: 'tuple',
+        components: [
+          { name: 'price', internalType: 'uint256', type: 'uint256' },
+          { name: 'seller', internalType: 'address', type: 'address' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'seller', internalType: 'address', type: 'address' }],
+    name: 'getProceeds',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'nftAddress', internalType: 'address', type: 'address' },
       { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
       { name: 'price', internalType: 'uint256', type: 'uint256' },
     ],
-    name: 'createMarketItem',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'nftContractAddress', internalType: 'address', type: 'address' },
-      { name: 'marketItemId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'createMarketSale',
+    name: 'listItem',
     outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'fetchAvailableMarketItems',
-    outputs: [
-      {
-        name: '',
-        internalType: 'struct Marketplace.MarketItem[]',
-        type: 'tuple[]',
-        components: [
-          { name: 'marketItemId', internalType: 'uint256', type: 'uint256' },
-          {
-            name: 'nftContractAddress',
-            internalType: 'address',
-            type: 'address',
-          },
-          { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-          { name: 'creator', internalType: 'address payable', type: 'address' },
-          { name: 'seller', internalType: 'address payable', type: 'address' },
-          { name: 'owner', internalType: 'address payable', type: 'address' },
-          { name: 'price', internalType: 'uint256', type: 'uint256' },
-          { name: 'sold', internalType: 'bool', type: 'bool' },
-          { name: 'canceled', internalType: 'bool', type: 'bool' },
-        ],
-      },
-    ],
-    stateMutability: 'view',
+    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
     inputs: [
-      { name: '_addressProperty', internalType: 'string', type: 'string' },
+      { name: 'nftAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'newPrice', internalType: 'uint256', type: 'uint256' },
     ],
-    name: 'fetchMarketItemsByAddressProperty',
-    outputs: [
-      {
-        name: '',
-        internalType: 'struct Marketplace.MarketItem[]',
-        type: 'tuple[]',
-        components: [
-          { name: 'marketItemId', internalType: 'uint256', type: 'uint256' },
-          {
-            name: 'nftContractAddress',
-            internalType: 'address',
-            type: 'address',
-          },
-          { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-          { name: 'creator', internalType: 'address payable', type: 'address' },
-          { name: 'seller', internalType: 'address payable', type: 'address' },
-          { name: 'owner', internalType: 'address payable', type: 'address' },
-          { name: 'price', internalType: 'uint256', type: 'uint256' },
-          { name: 'sold', internalType: 'bool', type: 'bool' },
-          { name: 'canceled', internalType: 'bool', type: 'bool' },
-        ],
-      },
-    ],
-    stateMutability: 'view',
+    name: 'updateListing',
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
     inputs: [],
-    name: 'fetchOwnedMarketItems',
-    outputs: [
-      {
-        name: '',
-        internalType: 'struct Marketplace.MarketItem[]',
-        type: 'tuple[]',
-        components: [
-          { name: 'marketItemId', internalType: 'uint256', type: 'uint256' },
-          {
-            name: 'nftContractAddress',
-            internalType: 'address',
-            type: 'address',
-          },
-          { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-          { name: 'creator', internalType: 'address payable', type: 'address' },
-          { name: 'seller', internalType: 'address payable', type: 'address' },
-          { name: 'owner', internalType: 'address payable', type: 'address' },
-          { name: 'price', internalType: 'uint256', type: 'uint256' },
-          { name: 'sold', internalType: 'bool', type: 'bool' },
-          { name: 'canceled', internalType: 'bool', type: 'bool' },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'fetchSellingMarketItems',
-    outputs: [
-      {
-        name: '',
-        internalType: 'struct Marketplace.MarketItem[]',
-        type: 'tuple[]',
-        components: [
-          { name: 'marketItemId', internalType: 'uint256', type: 'uint256' },
-          {
-            name: 'nftContractAddress',
-            internalType: 'address',
-            type: 'address',
-          },
-          { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-          { name: 'creator', internalType: 'address payable', type: 'address' },
-          { name: 'seller', internalType: 'address payable', type: 'address' },
-          { name: 'owner', internalType: 'address payable', type: 'address' },
-          { name: 'price', internalType: 'uint256', type: 'uint256' },
-          { name: 'sold', internalType: 'bool', type: 'bool' },
-          { name: 'canceled', internalType: 'bool', type: 'bool' },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'getLatestMarketItemByTokenId',
-    outputs: [
-      {
-        name: '',
-        internalType: 'struct Marketplace.MarketItem',
-        type: 'tuple',
-        components: [
-          { name: 'marketItemId', internalType: 'uint256', type: 'uint256' },
-          {
-            name: 'nftContractAddress',
-            internalType: 'address',
-            type: 'address',
-          },
-          { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-          { name: 'creator', internalType: 'address payable', type: 'address' },
-          { name: 'seller', internalType: 'address payable', type: 'address' },
-          { name: 'owner', internalType: 'address payable', type: 'address' },
-          { name: 'price', internalType: 'uint256', type: 'uint256' },
-          { name: 'sold', internalType: 'bool', type: 'bool' },
-          { name: 'canceled', internalType: 'bool', type: 'bool' },
-        ],
-      },
-      { name: '', internalType: 'bool', type: 'bool' },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'getListingFee',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
+    name: 'withdrawProceeds',
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
 ] as const
 
@@ -1845,13 +1804,7 @@ export const marketplaceAbi = [
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export const nftAbi = [
-  {
-    type: 'constructor',
-    inputs: [
-      { name: '_marketplaceAddress', internalType: 'address', type: 'address' },
-    ],
-    stateMutability: 'nonpayable',
-  },
+  { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
   {
     type: 'error',
     inputs: [
@@ -1980,31 +1933,6 @@ export const nftAbi = [
     type: 'event',
     anonymous: false,
     inputs: [
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'tokenURI',
-        internalType: 'string',
-        type: 'string',
-        indexed: false,
-      },
-      {
-        name: 'marketplaceAddress',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-    ],
-    name: 'TokenMinted',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
       { name: 'from', internalType: 'address', type: 'address', indexed: true },
       { name: 'to', internalType: 'address', type: 'address', indexed: true },
       {
@@ -2042,23 +1970,9 @@ export const nftAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'getTokenCreatorById',
-    outputs: [{ name: '', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
     inputs: [],
-    name: 'getTokensCreatedByMe',
-    outputs: [{ name: '', internalType: 'uint256[]', type: 'uint256[]' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'getTokensOwnedByMe',
-    outputs: [{ name: '', internalType: 'uint256[]', type: 'uint256[]' }],
+    name: 'getOwn',
+    outputs: [{ name: '', internalType: 'address[]', type: 'address[]' }],
     stateMutability: 'view',
   },
   {
@@ -2073,7 +1987,10 @@ export const nftAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: 'tokenURI', internalType: 'string', type: 'string' }],
+    inputs: [
+      { name: 'player', internalType: 'address', type: 'address' },
+      { name: 'tokenURI', internalType: 'string', type: 'string' },
+    ],
     name: 'mintToken',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'nonpayable',
