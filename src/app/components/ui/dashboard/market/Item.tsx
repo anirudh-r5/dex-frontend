@@ -1,14 +1,5 @@
 import { ItemListing } from '@/app/dashboard/market/page';
-import rabbitPng from '../../../../assets/nfts/0.png';
-import astroPng from '../../../../assets/nfts/1.png';
-import beaverPng from '../../../../assets/nfts/2.png';
-import catPng from '../../../../assets/nfts/3.png';
-import chickPng from '../../../../assets/nfts/4.png';
-import dogPng from '../../../../assets/nfts/5.png';
-import hackerPng from '../../../../assets/nfts/6.png';
-import manPng from '../../../../assets/nfts/7.png';
-import foxPng from '../../../../assets/nfts/8.png';
-import pandaPng from '../../../../assets/nfts/9.png';
+import { pngs } from '@/app/lib/imgLoader';
 import { useEffect, useState } from 'react';
 import { StaticImageData } from 'next/image';
 
@@ -21,49 +12,49 @@ export default function Item({ listing }: ItemProps) {
   const [nftName, setNftName] = useState<string>();
 
   useEffect(() => {
-    switch (listing.uri) {
+    switch (listing.data) {
       case '0':
-        setNftImg(rabbitPng);
+        setNftImg(pngs[0]);
         setNftName('The Rabbit');
         break;
       case '1':
-        setNftImg(astroPng);
+        setNftImg(pngs[1]);
         setNftName('The Astronaut');
         break;
       case '2':
-        setNftImg(beaverPng);
+        setNftImg(pngs[2]);
         setNftName('The Beaver');
         break;
       case '3':
-        setNftImg(catPng);
+        setNftImg(pngs[3]);
         setNftName('The Cat');
         break;
       case '4':
-        setNftImg(chickPng);
+        setNftImg(pngs[4]);
         setNftName('The Chick');
         break;
       case '5':
-        setNftImg(dogPng);
+        setNftImg(pngs[5]);
         setNftName('The Dog');
         break;
       case '6':
-        setNftImg(hackerPng);
+        setNftImg(pngs[6]);
         setNftName('The Hacker');
         break;
       case '7':
-        setNftImg(manPng);
+        setNftImg(pngs[7]);
         setNftName('The Man');
         break;
       case '8':
-        setNftImg(foxPng);
+        setNftImg(pngs[8]);
         setNftName('The Fox');
         break;
       case '9':
-        setNftImg(pandaPng);
+        setNftImg(pngs[9]);
         setNftName('The Panda');
         break;
     }
-  }, [listing.uri]);
+  }, [listing.data]);
   return (
     <div className="card bg-base-200 shadow-2xl m-4 w-80">
       <figure className="px-10 pt-10">
@@ -71,7 +62,7 @@ export default function Item({ listing }: ItemProps) {
       </figure>
       <div className="card-body items-center text-center">
         <h2 className="card-title">{nftName}</h2>
-        <p>Owner: {listing.owner}</p>
+        <p>Seller: {listing.seller}</p>
         <p>Price: {listing.price}</p>
         <div className="card-actions">
           <button className="btn btn-primary">Buy Now</button>
